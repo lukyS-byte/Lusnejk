@@ -180,6 +180,7 @@ canvas{width:100%;height:100%;display:block;}
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 .lb-empty{color:rgba(255,255,255,0.25);font-size:0.85rem;text-align:center;margin-top:40px;}
+.ov-hlaska{font-size:0.85rem;color:rgba(255,255,255,0.55);text-align:center;line-height:1.5;max-width:260px;font-style:italic;padding:0 10px;}
 
 /* Name dialog */
 .nd{
@@ -419,14 +420,39 @@ function draw(t) {
 
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
 
+const hlasky = [
+  "Tomu říkáš hrát? Můj děda hraje líp a je slepej. 👴",
+  "Wow. To bylo... tristní. 🥱",
+  "Had se zabil smíchy. 😂",
+  "I šnek by tě předjel. 🐌",
+  "Zkus to znovu, tentokrát s otevřenýma očima. 👀",
+  "To byl had nebo žížala? 🤔",
+  "Moje babička by to dala levou zadní. 👵",
+  "GG. To znamená 'grozná hra'. 💀",
+  "Kamarádi to uvidí v žebříčku... omluvíš se jim? 😬",
+  "Tohle byl výkon hodný rámování. Na zeď hanby. 🖼️",
+];
+
+const hlaskyRekord = [
+  "Rekord? Asi jsi hrál sám, co? 😏",
+  "Konečně! Trvalo ti to jen věčnost. ⏰",
+  "OK, to bylo... překvapivě méně příšerné. 👏",
+  "Rekord! Kamarádi tě stejně porazí. 😈",
+  "Wow, dokázal jsi to! Chceš medaili? 🥇 (nedostaneš ji)",
+];
+
 function die(){
   running=false;
   if(raf) cancelAnimationFrame(raf);
   const rec=score===hi&&score>0;
+  const hlaška = rec
+    ? hlaskyRekord[Math.floor(Math.random()*hlaskyRekord.length)]
+    : hlasky[Math.floor(Math.random()*hlasky.length)];
   ov.innerHTML=`
     <div class="ov-emoji">${rec?'🏆':'💀'}</div>
     <div class="ov-title">${rec?'Rekord!':'Game Over'}</div>
     <div class="ov-score">${score}</div>
+    <div class="ov-hlaska">${hlaška}</div>
     <div class="ov-stats">
       <div class="ov-stat"><span>délka</span><span>${snake.length}</span></div>
       <div class="ov-stat"><span>level</span><span>${level}</span></div>
