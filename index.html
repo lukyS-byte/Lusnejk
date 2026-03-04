@@ -531,8 +531,12 @@ async function getLB(){
     const res = await fetch(BIN_URL+'/latest', {headers:{'X-Master-Key':API_KEY}});
     const data = await res.json();
     const scores = data.record?.scores || [];
-    scores.sort((a,b)=>b.score-a.score);
-    return scores.slice(0,20);
+    // Jen nejlepší skóre každého hráče
+    const best = {};
+    scores.forEach(e => {
+      if(!best[e.name] || e.score > best[e.name].score) best[e.name] = e;
+    });
+    return Object.values(best).sort((a,b)=>b.score-a.score).slice(0,20);
   } catch(e) { console.log('getLB error',e); return []; }
 }
 
