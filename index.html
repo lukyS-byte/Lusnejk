@@ -520,30 +520,34 @@ tzone.addEventListener('mousedown', e=>{
   flashDir(m.d);
 });
 
-// ── LEADERBOARD (sdílený přes window.storage) ──
+// ── LEADERBOARD (jsonbin.io) ──
+const BIN_ID = '69a806e2d0ea881f40eda832';
+const API_KEY = '$2a$10$VupJYoKcGX3FUJypPtJZUek2wTcgU.GXs0..fOWBZcrM5ZdmjRMMi';
+const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 let myName = localStorage.getItem('snakeName') || '';
 
 async function getLB(){
   try {
-    const keys = await window.storage.list('snk:', true);
-    if(!keys || !keys.keys || !keys.keys.length) return [];
-    const entries = [];
-    for(const key of keys.keys){
-      try {
-        const r = await window.storage.get(key, true);
-        if(r) entries.push(JSON.parse(r.value));
-      } catch {}
-    }
-    entries.sort((a,b)=>b.score-a.score);
-    return entries.slice(0,30);
-  } catch { return []; }
+    const res = await fetch(BIN_URL+'/latest', {headers:{'X-Master-Key':API_KEY}});
+    const data = await res.json();
+    const scores = data.record?.scores || [];
+    scores.sort((a,b)=>b.score-a.score);
+    return scores.slice(0,20);
+  } catch(e) { console.log('getLB error',e); return []; }
 }
 
 async function addScore(name, score){
   try {
-    const key = 'snk:' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
-    await window.storage.set(key, JSON.stringify({name, score, date:Date.now()}), true);
-  } catch(e) { console.log('save error', e); }
+    const scores = await getLB();
+    scores.push({name, score, date:Date.now()});
+    scores.sort((a,b)=>b.score-a.score);
+    const res = await fetch(BIN_URL, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},
+      body:JSON.stringify({scores:scores.slice(0,50)})
+    });
+    console.log('save status:', res.status);
+  } catch(e) { console.log('addScore error', e); }
 }
 
 async function openLB(){
@@ -562,16 +566,12 @@ async function openLB(){
 function closeLB(){ document.getElementById('lb').classList.remove('open'); }
 
 function showND(){
-  const ni = document.getElementById('ni');
-  ni.value = myName;
+  document.getElementById('ni').value = myName;
   document.getElementById('nd').classList.add('open');
-  setTimeout(()=>ni.focus(),300);
+  setTimeout(()=>document.getElementById('ni').focus(),300);
 }
 
-function changeName(){
-  closeLB();
-  showND();
-}
+function changeName(){ closeLB(); showND(); }
 
 function submitName(){
   const name = document.getElementById('ni').value.trim();
@@ -584,11 +584,10 @@ function submitName(){
 
 document.getElementById('ni').addEventListener('keydown',e=>{ if(e.key==='Enter') submitName(); });
 
-// First visit – ask for name
 if(!myName) showND();
+
 async function handleScoreSubmit(score){
   if(!myName){
-    // need to get name first – wait for it then submit
     showND();
     await new Promise(resolve=>{
       const orig = window.submitName;
@@ -604,6 +603,7 @@ async function handleScoreSubmit(score){
     });
   }
   await addScore(myName, score);
+  openLB();
 }
 </script>
 </body>
